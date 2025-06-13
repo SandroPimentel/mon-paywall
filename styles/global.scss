@@ -1,0 +1,199 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+:root {
+  --bg-main: #0e0e12;
+  --bg-card: #191b22;
+  --accent: #0ad1a4;
+  --accent2: #3a86ff;
+  --txt-main: #f3f6fa;
+  --txt-soft: #adb7c2;
+  --danger: #ff6565;
+  --radius-xl: 1.6rem;
+  --radius-lg: 1rem;
+  --shadow: 0 2px 24px #0007;
+  --max-width: 1100px;
+}
+
+body {
+  background: var(--bg-main);
+  color: var(--txt-main);
+  font-family: 'Inter', Arial, Helvetica, sans-serif;
+  font-size: 20px;
+  margin: 0;
+  min-height: 100vh;
+  letter-spacing: 0.03em;
+}
+
+main {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px 48px 24px;
+  width: 100%;
+}
+
+h1, h2, h3 {
+  font-weight: 700;
+  color: var(--accent2);
+  margin-top: 0;
+}
+
+.site-title {
+  font-size: 2.6rem;
+  margin-top: 2.5rem;
+  text-align: center;
+  color: var(--accent2);
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+.site-desc {
+  font-size: 1.22rem;
+  text-align: center;
+  color: var(--txt-soft);
+  margin-bottom: 3rem;
+  max-width: 680px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.dossier-grid {
+  display: grid;
+  gap: 2.3rem;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  margin: 0 auto;
+}
+
+.dossier-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
+  padding: 1.7rem 1.4rem 1.3rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+  transition: box-shadow 0.2s, transform 0.13s;
+  min-height: 270px;
+}
+
+.dossier-card:hover {
+  box-shadow: 0 6px 40px #0ad1a455;
+  transform: scale(1.025);
+}
+
+.dossier-image {
+  width: 62px;
+  height: 62px;
+  margin-bottom: 1.1rem;
+  border-radius: 16px;
+  object-fit: contain;
+  background: #222a;
+  box-shadow: 0 1px 8px #1116;
+}
+
+.card-title {
+  margin-bottom: 0.5rem;
+  color: var(--accent2);
+  font-size: 1.28em;
+  font-weight: 700;
+  margin-top: 0;
+}
+.card-desc {
+  color: var(--txt-soft);
+  font-size: 1.13em;
+  margin-bottom: 0.7em;
+  flex: 1;
+}
+
+.card-prix {
+  margin: 0 0 1em 0;
+  font-size: 1.14em;
+  color: var(--accent);
+}
+
+button, input, textarea {
+  font-family: inherit;
+  border: none;
+  outline: none;
+}
+
+button {
+  background: var(--accent2);
+  color: #fff;
+  padding: 12px 28px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  font-size: 1.1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+button:hover {
+  background: var(--accent);
+}
+
+input, textarea {
+  background: #232530;
+  color: var(--txt-main);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  margin-top: 6px;
+  margin-bottom: 14px;
+  font-size: 1em;
+  width: 100%;
+  border: 1.5px solid #232530;
+  transition: border 0.2s;
+}
+
+input:focus, textarea:focus {
+  border: 1.5px solid var(--accent2);
+}
+
+.overlay-btc-form {
+  position: fixed;
+  z-index: 1100;
+  left: 0; top: 0; width: 100vw; height: 100vh;
+  background: #0e0e12ee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.22s;
+}
+@keyframes fadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+.overlay-inner {
+  max-width: 440px;
+  width: 100%;
+  background: var(--bg-card);
+  box-shadow: var(--shadow);
+  border-radius: var(--radius-xl);
+  padding: 2.5rem 2rem 1.6rem 2rem;
+  position: relative;
+}
+
+.overlay-close {
+  position: absolute;
+  top: 14px;
+  right: 22px;
+  font-size: 2.1em;
+  color: var(--txt-soft);
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 1200;
+  transition: color 0.15s;
+}
+.overlay-close:hover { color: var(--danger); }
+
+@media (max-width: 800px) {
+  :root { --max-width: 99vw; }
+  .overlay-inner { padding: 1.5rem 6px 1.3rem 6px; }
+}
+@media (max-width: 560px) {
+  .dossier-card { min-height: 180px; padding: 1.1rem 0.7rem; }
+  .site-title { font-size: 1.38em; }
+  .dossier-image { width: 38px; height: 38px; }
+}
