@@ -9,7 +9,6 @@ export default function BtcPaymentForm({ dossier }: { dossier: Dossier }) {
   const [btcPrice, setBtcPrice] = useState<number | null>(null);
   const [priceBtc, setPriceBtc] = useState<string>("");
 
-  // Utilise ton API proxy backend
   useEffect(() => {
     async function fetchBtcPrice() {
       try {
@@ -20,7 +19,7 @@ export default function BtcPaymentForm({ dossier }: { dossier: Dossier }) {
         } else {
           setBtcPrice(null);
         }
-      } catch (err) {
+      } catch {
         setBtcPrice(null);
       }
     }

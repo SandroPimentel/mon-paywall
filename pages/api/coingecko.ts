@@ -1,8 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
+type CoingeckoPrice = {
+  bitcoin: {
+    usd: number;
+  };
+};
+
 // Optionnel : simple cache mémoire (1 minute)
 let lastFetch: number = 0;
-let lastPrice: any = null;
+let lastPrice: CoingeckoPrice | null = null;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const now = Date.now();
@@ -16,11 +22,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!coingecko.ok) {
       return res.status(502).json({ error: "CoinGecko error" });
     }
-    const data = await coingecko.json();
+    const data: CoingeckoPrice = await coingecko.json();
     lastFetch = now;
     lastPrice = data;
     res.status(200).json(data);
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: "fetch_failed" });
   }
 }
