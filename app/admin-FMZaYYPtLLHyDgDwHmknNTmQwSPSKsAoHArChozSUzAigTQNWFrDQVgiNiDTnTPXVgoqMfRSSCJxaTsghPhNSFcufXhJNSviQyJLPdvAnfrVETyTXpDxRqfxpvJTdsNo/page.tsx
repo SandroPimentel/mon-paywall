@@ -7,8 +7,9 @@ type GuestPurchase = {
   email: string;
   dossierId: string;
   createdAt: string;
-  txid?: string; // Ajoute ce champ si pas déjà dans ta base
-  amountBtc?: number; // Ajoute ce champ si tu veux afficher le montant payé en BTC
+  txid?: string;
+  amountBtc?: number;
+  btcUsdRate?: number;
 };
 type Dossier = {
   id: string;
@@ -75,7 +76,7 @@ export default function Admin() {
     setEditId(d.id);
   }
 
-  async function handleDelete(id: string) {
+  async function handleDeleteDossier(id: string) {
     if (!confirm("Supprimer ce dossier ?")) return;
     const res = await fetch("/api/delete-dossier", {
       method: "POST",
@@ -84,22 +85,24 @@ export default function Admin() {
     });
     if (res.ok) {
       setMsg("Dossier supprimé !");
+      setDossiers(dossiers => dossiers.filter(d => d.id !== id));
     } else {
       setMsg("Erreur à la suppression");
     }
   }
 
-  // Suppression de l'historique achats
-  async function handleDeleteHistory() {
-    if (!confirm("Vider tout l'historique d'achats ?")) return;
-    const res = await fetch("/api/delete-purchase-history", {
-      method: "POST"
+  // Suppression individuelle d'un achat
+  async function handleDeletePurchase(id: string) {
+    if (!confirm("Supprimer cet achat ?")) return;
+    const res = await fetch("/api/delete-purchase", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
     });
     if (res.ok) {
-      setPurchases([]);
-      setMsg("Historique vidé !");
+      setPurchases(purchases => purchases.filter(p => p.id !== id));
     } else {
-      setMsg("Erreur lors de la suppression de l'historique.");
+      alert("Erreur lors de la suppression.");
     }
   }
 
@@ -136,9 +139,6 @@ export default function Admin() {
 
       <section style={{ marginBottom: 38 }}>
         <h3>Achats clients</h3>
-        <button onClick={handleDeleteHistory} style={{ background: "#a22", color: "#fff", margin: "0 0 10px 0", float: "right" }}>
-          Vider l'historique
-        </button>
         <div style={{ overflowX: "auto" }}>
           <table style={{
             width: "100%", borderCollapse: "collapse", fontSize: 17, background: "#222", borderRadius: 10
@@ -150,6 +150,8 @@ export default function Admin() {
                 <th>Dossier</th>
                 <th>TXID</th>
                 <th>Montant BTC</th>
+                <th>Taux BTC/USD</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -158,13 +160,22 @@ export default function Admin() {
                   <td style={{ padding: "7px 8px" }}>{new Date(a.createdAt).toLocaleString()}</td>
                   <td>{a.email}</td>
                   <td>{dossiers.find(d => d.id === a.dossierId)?.title || a.dossierId}</td>
-                  <td>{(a as any).txid || "-"}</td>
-                  <td>{(a as any).amountBtc ? (a as any).amountBtc + " BTC" : "-"}</td>
+                  <td style={{ fontFamily: "monospace", fontSize: 14 }}>{a.txid || "-"}</td>
+                  <td>{a.amountBtc ? `${a.amountBtc} BTC` : "-"}</td>
+                  <td>{a.btcUsdRate ? `${a.btcUsdRate}$` : "-"}</td>
+                  <td>
+                    <button
+                      onClick={() => handleDeletePurchase(a.id)}
+                      style={{ background: "#c22", color: "#fff", borderRadius: 6, fontSize: 15, padding: "6px 16px" }}
+                    >
+                      Supprimer
+                    </button>
+                  </td>
                 </tr>
               ))}
               {purchases.length === 0 && (
                 <tr>
-                  <td colSpan={5} style={{ color: "#888", textAlign: "center", padding: 16 }}>Aucun achat enregistré.</td>
+                  <td colSpan={7} style={{ color: "#888", textAlign: "center", padding: 16 }}>Aucun achat enregistré.</td>
                 </tr>
               )}
             </tbody>
@@ -194,7 +205,7 @@ export default function Admin() {
                   <td>{d.price}</td>
                   <td>
                     <button onClick={() => handleEdit(d)} style={{ marginRight: 8 }}>Modifier</button>
-                    <button onClick={() => handleDelete(d.id)} style={{ background: "#c22", color: "#fff" }}>Supprimer</button>
+                    <button onClick={() => handleDeleteDossier(d.id)} style={{ background: "#c22", color: "#fff" }}>Supprimer</button>
                   </td>
                 </tr>
               ))}

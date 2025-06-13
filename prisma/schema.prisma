@@ -64,8 +64,11 @@ model Dossier {
 }
 
 model GuestPurchase {
-  id         String   @id @default(cuid())
-  email      String
-  dossierId  String
-  createdAt  DateTime @default(now())
+  id        String   @id @default(uuid())
+  email     String
+  dossierId String
+  txid      String?
+  amountBtc Float?
+  btcUsdRate Float?
+  createdAt DateTime @default(now())
 }

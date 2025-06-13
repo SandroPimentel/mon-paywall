@@ -8,6 +8,7 @@ const BTC_ADDRESS = "bc1qaukltdwvanelgy66y486f7ahz222tkxqjk76ua";
 export default function BtcPaymentForm({ dossier }: { dossier: Dossier }) {
   const [btcPrice, setBtcPrice] = useState<number | null>(null);
   const [priceBtc, setPriceBtc] = useState<string>("");
+  const [btcPriceFetchedAt, setBtcPriceFetchedAt] = useState<number>(Date.now());
 
   useEffect(() => {
     async function fetchBtcPrice() {
@@ -16,6 +17,7 @@ export default function BtcPaymentForm({ dossier }: { dossier: Dossier }) {
         const data = await res.json();
         if (data && data.bitcoin && typeof data.bitcoin.usd === "number") {
           setBtcPrice(data.bitcoin.usd);
+          setBtcPriceFetchedAt(Date.now());
         } else {
           setBtcPrice(null);
         }
@@ -42,19 +44,31 @@ export default function BtcPaymentForm({ dossier }: { dossier: Dossier }) {
 
   async function handleAchat(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setStatus("Vérification du paiement en cours...");
+    setStatus("Envoi de la commande...");
     const res = await fetch("/api/guest-buy", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dossierId: dossier.id, email, txid }),
+      body: JSON.stringify({
+        dossierId: dossier.id,
+        email,
+        txid,
+        amountBtc: Number(priceBtc),
+        btcUsdRate: btcPrice
+      }),
     });
     const data = await res.json();
     if (res.ok && data.ok) {
-      setStatus("✅ Paiement validé ! Vous recevrez l'accès prochainement.");
+      setStatus("✅ Commande enregistrée ! Vous recevrez l'accès prochainement.");
     } else {
       setStatus(data.error ? "❌ " + data.error : "❌ Une erreur est survenue.");
     }
   }
+
+  // Calcul du temps de validité (60min)
+  const validityDuration = 60 * 60 * 1000; // 1 heure en ms
+  const timeLeft = btcPriceFetchedAt + validityDuration - Date.now();
+  const isPriceExpired = timeLeft < 0;
+  const minWarning = Math.max(1, Math.floor(timeLeft / 60000));
 
   return (
     <form onSubmit={handleAchat}>
@@ -106,6 +120,11 @@ export default function BtcPaymentForm({ dossier }: { dossier: Dossier }) {
         ⚠️ Envoyez le montant exact en BTC.<br />
         <b>Si le montant est inférieur, vous ne recevrez pas le dossier.</b><br />
         Aucun remboursement si excédent. Les frais sont à votre charge.
+        <div style={{ color: isPriceExpired ? "#ff6565" : "#fab005", marginTop: 7, fontSize: 16 }}>
+          {isPriceExpired
+            ? "⏰ Le taux BTC/USD affiché est expiré. Veuillez rafraîchir la page pour actualiser le montant à payer."
+            : `Ce montant en BTC est valable encore ${minWarning} minute(s). Après, il faudra rafraîchir la page.`}
+        </div>
       </div>
       <label style={{ fontSize: "1.12em" }}>
         Votre mail Google
@@ -126,7 +145,11 @@ export default function BtcPaymentForm({ dossier }: { dossier: Dossier }) {
           placeholder="Collez ici le TXID Bitcoin"
         />
       </label>
-      <button type="submit" style={{ fontSize: "1.15em", padding: "14px 38px" }}>
+      <button
+        type="submit"
+        style={{ fontSize: "1.15em", padding: "14px 38px" }}
+        disabled={isPriceExpired}
+      >
         Vérifier le paiement
       </button>
       {status && <div style={{ marginTop: 20, color: status.startsWith("✅") ? "var(--accent)" : "var(--danger)" }}>{status}</div>}
