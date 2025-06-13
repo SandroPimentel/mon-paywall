@@ -1,46 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "../../lib/prisma";
 
-const BTC_ADDRESS = "bc1qaukltdwvanelgy66y486f7ahz222tkxqjk76ua"; // Ton adresse en minuscule
+const BTC_ADDRESS = "bc1qaukltdwvanelgy66y486f7ahz222tkxqjk76ua"; // Pas utilisé ici mais tu peux garder
 
 type GuestBuyBody = {
   dossierId: string;
   email: string;
   txid: string;
 };
-
-interface Vout {
-  scriptpubkey_address?: string;
-  value: number;
-}
-
-interface TxResponse {
-  vout: Vout[];
-}
-
-async function checkTx(txid: string, minAmountBtc = 0.0005): Promise<boolean> {
-  try {
-    const url = `https://blockstream.info/api/tx/${txid}`;
-    const r = await fetch(url);
-    if (!r.ok) return false;
-    const tx: TxResponse = await r.json();
-
-    // Vérifie chaque sortie
-    for (const vout of tx.vout) {
-      if (
-        vout.scriptpubkey_address &&
-        vout.scriptpubkey_address.toLowerCase() === BTC_ADDRESS &&
-        vout.value >= minAmountBtc * 1e8 // BTC → sats
-      ) {
-        return true;
-      }
-    }
-    return false;
-  } catch (err) {
-    console.error("Erreur checkTx:", err);
-    return false;
-  }
-}
 
 async function sendTelegramNotif(message: string): Promise<void> {
   const token = process.env.TELEGRAM_BOT_TOKEN!;
@@ -62,15 +29,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: "invalid_email" });
   }
 
-  // Vérifie la transaction sur la blockchain
-  const isPaid = await checkTx(txid);
-  if (!isPaid) {
-    return res.status(400).json({ error: "Paiement non trouvé ou montant insuffisant" });
-  }
-
   const dossier = await prisma.dossier.findUnique({ where: { id: dossierId } });
   if (!dossier) return res.status(404).json({ error: "not found" });
 
+  // Vérifie si déjà acheté
   const already = await prisma.guestPurchase.findFirst({
     where: { dossierId, email }
   });
@@ -80,10 +42,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     data: { dossierId, email },
   });
 
-  // Notif Telegram SEULEMENT SI paiement ok
+  // Notif Telegram avec le TXID
   try {
     await sendTelegramNotif(
-      `✅ <b>NOUVEL ACHAT (validé par TXID)</b>\nEmail : <code>${email}</code>\nDossier : <b>${dossier.title}</b>\nTXID : <code>${txid}</code>`
+      `✅ <b>NOUVEL ACHAT (à vérifier manuellement)</b>\nEmail : <code>${email}</code>\nDossier : <b>${dossier.title}</b>\nTXID : <code>${txid}</code>`
     );
   } catch (err) {
     console.error("Erreur notif Telegram :", err);

@@ -27,7 +27,7 @@ body {
 main {
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 0 24px 48px 24px;
+  padding: 0 14px 48px 14px;
   width: 100%;
 }
 
@@ -38,18 +38,18 @@ h1, h2, h3 {
 }
 
 .site-title {
-  font-size: 2.6rem;
-  margin-top: 2.5rem;
+  font-size: 2.2rem;
+  margin-top: 2.3rem;
   text-align: center;
   color: var(--accent2);
   font-weight: 700;
   letter-spacing: -1px;
 }
 .site-desc {
-  font-size: 1.22rem;
+  font-size: 1.18rem;
   text-align: center;
   color: var(--txt-soft);
-  margin-bottom: 3rem;
+  margin-bottom: 2.2rem;
   max-width: 680px;
   margin-left: auto;
   margin-right: auto;
@@ -60,30 +60,36 @@ h1, h2, h3 {
   gap: 2.3rem;
   grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
   margin: 0 auto;
+  width: 100%;
+  padding-bottom: 16px;
 }
 
 .dossier-card {
   background: var(--bg-card);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow);
-  padding: 1.7rem 1.4rem 1.3rem 1.4rem;
+  padding: 2.2rem 1.7rem 1.8rem 1.7rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   position: relative;
   transition: box-shadow 0.2s, transform 0.13s;
-  min-height: 270px;
+  min-height: 220px;
+  min-width: 0;
+  max-width: 99vw;
+  box-sizing: border-box;
+  margin-bottom: 12px;
 }
-
 .dossier-card:hover {
   box-shadow: 0 6px 40px #0ad1a455;
   transform: scale(1.025);
 }
 
 .dossier-image {
-  width: 62px;
-  height: 62px;
-  margin-bottom: 1.1rem;
+  width: 54px !important;
+  height: 54px !important;
+  margin-bottom: 1.4rem;
+  margin-top: -0.5rem;
   border-radius: 16px;
   object-fit: contain;
   background: #222a;
@@ -93,7 +99,7 @@ h1, h2, h3 {
 .card-title {
   margin-bottom: 0.5rem;
   color: var(--accent2);
-  font-size: 1.28em;
+  font-size: 1.21em;
   font-weight: 700;
   margin-top: 0;
 }
@@ -103,11 +109,11 @@ h1, h2, h3 {
   margin-bottom: 0.7em;
   flex: 1;
 }
-
 .card-prix {
-  margin: 0 0 1em 0;
-  font-size: 1.14em;
+  margin: 0 0 1.2em 0;
+  font-size: 1.17em;
   color: var(--accent);
+  font-weight: 600;
 }
 
 button, input, textarea {
@@ -119,15 +125,18 @@ button, input, textarea {
 button {
   background: var(--accent2);
   color: #fff;
-  padding: 12px 28px;
+  padding: 17px 0;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
-  font-size: 1.1em;
+  font-size: 1.16em;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
   margin-top: 12px;
   margin-bottom: 8px;
+  width: 100%;
+  display: block;
+  letter-spacing: 0.04em;
 }
 
 button:hover {
@@ -138,10 +147,10 @@ input, textarea {
   background: #232530;
   color: var(--txt-main);
   border-radius: var(--radius-lg);
-  padding: 12px;
-  margin-top: 6px;
-  margin-bottom: 14px;
-  font-size: 1em;
+  padding: 16px;
+  margin-top: 10px;
+  margin-bottom: 18px;
+  font-size: 1.08em;
   width: 100%;
   border: 1.5px solid #232530;
   transition: border 0.2s;
@@ -151,34 +160,53 @@ input:focus, textarea:focus {
   border: 1.5px solid var(--accent2);
 }
 
+label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 1.08em;
+  font-weight: 600;
+}
+
 .overlay-btc-form {
   position: fixed;
   z-index: 1100;
   left: 0; top: 0; width: 100vw; height: 100vh;
-  background: #0e0e12ee;
+  background: #0e0e12f6;
   display: flex;
   align-items: center;
   justify-content: center;
   animation: fadeIn 0.22s;
+  padding: 18px;
 }
 @keyframes fadeIn {
   from { opacity: 0; } to { opacity: 1; }
 }
 .overlay-inner {
-  max-width: 440px;
+  max-width: 98vw;
   width: 100%;
   background: var(--bg-card);
   box-shadow: var(--shadow);
   border-radius: var(--radius-xl);
-  padding: 2.5rem 2rem 1.6rem 2rem;
+  padding: 2.6rem 2.2rem 2.2rem 2.2rem;
   position: relative;
+  overflow-y: auto;
+  max-height: 97vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 }
-
+.overlay-inner > *:not(.overlay-close) {
+  width: 100%;
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+}
 .overlay-close {
   position: absolute;
-  top: 14px;
-  right: 22px;
-  font-size: 2.1em;
+  top: 18px;
+  right: 32px;
+  font-size: 2.4em;
   color: var(--txt-soft);
   background: none;
   border: none;
@@ -188,12 +216,92 @@ input:focus, textarea:focus {
 }
 .overlay-close:hover { color: var(--danger); }
 
-@media (max-width: 800px) {
-  :root { --max-width: 99vw; }
-  .overlay-inner { padding: 1.5rem 6px 1.3rem 6px; }
+form {
+  width: 100%;
+  max-width: 490px;
+  margin: 0 auto;
 }
-@media (max-width: 560px) {
-  .dossier-card { min-height: 180px; padding: 1.1rem 0.7rem; }
-  .site-title { font-size: 1.38em; }
-  .dossier-image { width: 38px; height: 38px; }
+
+@media (max-width: 900px) {
+  .dossier-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.1rem;
+  }
+}
+@media (max-width: 700px) {
+  main {
+    padding: 0 0.6vw 16px 0.6vw;
+  }
+}
+@media (max-width: 600px) {
+  .site-title { font-size: 1.13em; margin-top: 1.4rem; }
+  .site-desc { font-size: 0.98em; margin-bottom: 1.2rem; }
+  .dossier-grid {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+  .dossier-card {
+    min-height: 120px;
+    padding: 1.1rem 0.7rem;
+    margin-bottom: 7px;
+  }
+  .dossier-image {
+    width: 38px !important;
+    height: 38px !important;
+    margin-bottom: 1.0rem;
+  }
+  .card-title { font-size: 1.05em; }
+  .overlay-inner {
+    padding: 1.1rem 0.3rem 1.3rem 0.3rem;
+    max-width: 99vw;
+    max-height: 99vh;
+    font-size: 0.97em;
+  }
+  form {
+    padding: 0 0.5rem;
+  }
+  input, textarea {
+    padding: 11px;
+    font-size: 0.98em;
+    margin-bottom: 12px;
+  }
+  button {
+    font-size: 1.03em;
+    padding: 12px 0;
+  }
+}
+@media (max-width: 400px) {
+  .site-title { font-size: 0.92em; }
+  .overlay-inner { padding: 0.6rem 0.08rem 0.8rem 0.08rem; }
+  input, textarea { padding: 8px; font-size: 0.97em; }
+  button { padding: 9px 0; font-size: 0.96em; }
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1em;
+  margin-top: 18px;
+  margin-bottom: 14px;
+}
+th, td {
+  padding: 9px 14px;
+  text-align: left;
+  word-break: break-word;
+}
+thead tr {
+  background: #232a32;
+  color: #aaa;
+}
+tbody tr {
+  border-bottom: 1px solid #2b2e3a;
+}
+
+@media (max-width: 700px) {
+  table {
+    font-size: 0.95em;
+  }
+  th, td {
+    padding: 5px 6px !important;
+  }
 }
