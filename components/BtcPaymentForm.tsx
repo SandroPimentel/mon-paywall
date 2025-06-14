@@ -5,10 +5,17 @@ import { Dossier } from "@/types/dossier";
 
 const BTC_ADDRESS = "bc1qaukltdwvanelgy66y486f7ahz222tkxqjk76ua";
 
-export default function BtcPaymentForm({ dossier }: { dossier: Dossier }) {
+export default function BtcPaymentForm({
+  dossier,
+  onSuccess,
+}: {
+  dossier: Dossier;
+  onSuccess?: () => void;
+}) {
   const [btcPrice, setBtcPrice] = useState<number | null>(null);
   const [priceBtc, setPriceBtc] = useState<string>("");
   const [btcPriceFetchedAt, setBtcPriceFetchedAt] = useState<number>(Date.now());
+  const [copyMsg, setCopyMsg] = useState<string>("");
 
   useEffect(() => {
     async function fetchBtcPrice() {
@@ -53,15 +60,23 @@ export default function BtcPaymentForm({ dossier }: { dossier: Dossier }) {
         email,
         txid,
         amountBtc: Number(priceBtc),
-        btcUsdRate: btcPrice
+        btcUsdRate: btcPrice,
       }),
     });
     const data = await res.json();
     if (res.ok && data.ok) {
-      setStatus("✅ Commande enregistrée ! Vous recevrez l'accès prochainement.");
+      setStatus("");
+      if (onSuccess) onSuccess();
     } else {
       setStatus(data.error ? "❌ " + data.error : "❌ Une erreur est survenue.");
     }
+  }
+
+  // Copie l'adresse
+  function handleCopyAddress() {
+    navigator.clipboard.writeText(BTC_ADDRESS);
+    setCopyMsg("Adresse copiée !");
+    setTimeout(() => setCopyMsg(""), 1600);
   }
 
   // Calcul du temps de validité (60min)
@@ -71,88 +86,103 @@ export default function BtcPaymentForm({ dossier }: { dossier: Dossier }) {
   const minWarning = Math.max(1, Math.floor(timeLeft / 60000));
 
   return (
-    <form onSubmit={handleAchat}>
-      <h3>Payer ce dossier par Bitcoin</h3>
-      <p>
-        Prix&nbsp;: <b>{dossier.price}$</b>&nbsp;
+    <form className="btc-pay-form" onSubmit={handleAchat} autoComplete="off">
+      <h3 className="btc-pay-title">Payer ce dossier par Bitcoin</h3>
+      <div className="btc-pay-pricebox">
+        <span>Prix :</span>
+        <b>{dossier.price}$</b>
         {btcPrice !== null ? (
           <>
-            (~<b>{priceBtc} BTC</b>)
-            <br />
-            <small style={{ color: "var(--txt-soft)" }}>
-              1 BTC = {btcPrice}$ (maj auto)
-            </small>
+            &nbsp;(~<b className="btc-amount">{priceBtc} BTC</b>)
+            <span className="btc-rate">1 BTC = {btcPrice}$ (maj auto)</span>
           </>
         ) : (
-          <span style={{ color: "var(--danger)" }}>Impossible de récupérer le taux BTC/USD pour le moment.</span>
+          <span className="btc-pay-error">
+            Impossible de récupérer le taux BTC/USD pour le moment.
+          </span>
         )}
-      </p>
-      <div style={{ display: "flex", gap: 28, alignItems: "center", margin: "18px 0" }}>
-        <QRCodeSVG value={BTC_ADDRESS} size={128} />
-        <div>
-          <div style={{
-            fontFamily: "monospace",
-            fontSize: 20,
-            background: "#222325",
-            padding: 12,
-            borderRadius: 10,
-            wordBreak: "break-all",
-            color: "var(--accent2)"
-          }}>
-            {BTC_ADDRESS}
+      </div>
+
+      <div className="btc-pay-qrcode">
+        <QRCodeSVG value={BTC_ADDRESS} size={190} />
+        <div className="btc-address-block">
+          <div className="btc-network-label">
+            Envoyez sur <b>cette adresse Bitcoin</b> (réseau BTC seulement)&nbsp;:
           </div>
-          <a href={`https://blockstream.info/address/${BTC_ADDRESS}`}
-             target="_blank"
-             rel="noopener noreferrer"
-             style={{ fontSize: 15, color: "var(--accent)" }}>
-            Voir sur Blockstream
-          </a>
+          <div className="btc-address">{BTC_ADDRESS}</div>
+          <button type="button" className="btc-copy-btn" onClick={handleCopyAddress}>
+            {copyMsg ? copyMsg : "Copier l'adresse"}
+          </button>
         </div>
       </div>
-      <div style={{
-        background: "#232528",
-        color: "var(--danger)",
-        padding: 14,
-        borderRadius: 10,
-        fontSize: 17,
-        margin: "18px 0"
-      }}>
-        ⚠️ Envoyez le montant exact en BTC.<br />
-        <b>Si le montant est inférieur, vous ne recevrez pas le dossier.</b><br />
-        Aucun remboursement si excédent. Les frais sont à votre charge.
-        <div style={{ color: isPriceExpired ? "#ff6565" : "#fab005", marginTop: 7, fontSize: 16 }}>
-          {isPriceExpired
-            ? "⏰ Le taux BTC/USD affiché est expiré. Veuillez rafraîchir la page pour actualiser le montant à payer."
-            : `Ce montant en BTC est valable encore ${minWarning} minute(s). Après, il faudra rafraîchir la page.`}
+
+<div className="btc-pay-warning">
+  <span className="btc-pay-icon">⚠️</span>
+  <div>
+    <b>
+      Envoyez <span className="btc-amount big">{priceBtc} BTC</span> exactement.<br />
+      Votre mail Google est <u>obligatoire</u> pour recevoir le dossier (partage Google Drive).
+    </b>
+    <div>
+      Si le montant est inférieur, <u>vous ne recevrez pas le dossier</u>.<br />
+      Aucun remboursement d’excédent. Les frais sont à votre charge.
+    </div>
+    <div className={isPriceExpired ? "btc-pay-expired" : "btc-pay-timer"}>
+      {isPriceExpired
+        ? "⏰ Le taux BTC/USD affiché est expiré. Veuillez rafraîchir la page pour actualiser le montant à payer."
+        : <>Ce montant en BTC est valable encore <b>{minWarning} minute(s)</b>. Après, il faudra rafraîchir la page.</>
+      }
+    </div>
+  </div>
+</div>
+
+
+
+      <div className="btc-pay-fields">
+        <div className="btc-pay-field">
+          <label>
+            Votre mail Google <span className="btc-pay-required">*</span>
+            <input
+              required
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="votre.email@gmail.com"
+              autoComplete="off"
+            />
+          </label>
+        </div>
+        <div className="btc-pay-field">
+          <label>
+            ID de transaction (TXID) <span className="btc-pay-required">*</span>
+            <input
+              required
+              value={txid}
+              onChange={e => setTxid(e.target.value)}
+              placeholder="Collez ici le TXID Bitcoin"
+              autoComplete="off"
+            />
+          </label>
         </div>
       </div>
-      <label style={{ fontSize: "1.12em" }}>
-        Votre mail Google
-        <input
-          required
-          type="email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          placeholder="votre.email@gmail.com"
-        />
-      </label>
-      <label style={{ fontSize: "1.12em" }}>
-        ID de transaction (TXID)
-        <input
-          required
-          value={txid}
-          onChange={e => setTxid(e.target.value)}
-          placeholder="Collez ici le TXID Bitcoin"
-        />
-      </label>
       <button
         type="submit"
-        style={{ fontSize: "1.15em", padding: "14px 38px" }}
+        className="btn-primary btc-pay-btn"
         disabled={isPriceExpired}
       >
         Vérifier le paiement
       </button>
-      {status && <div style={{ marginTop: 20, color: status.startsWith("✅") ? "var(--accent)" : "var(--danger)" }}>{status}</div>}
+      {status && (
+        <div
+          className={
+            status.startsWith("✅")
+              ? "btc-pay-status-success"
+              : "btc-pay-status-error"
+          }
+        >
+          {status}
+        </div>
+      )}
     </form>
   );
 }

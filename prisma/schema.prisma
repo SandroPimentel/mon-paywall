@@ -59,9 +59,11 @@ model Dossier {
   description String?
   price       Float
   files       String
+  images      String?    // <= new: stockera un JSON array de strings (URLs des images)
   createdAt   DateTime   @default(now())
   purchases   Purchase[]
 }
+
 
 model GuestPurchase {
   id         String   @id @default(cuid())

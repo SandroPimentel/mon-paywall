@@ -17,6 +17,7 @@ type Dossier = {
   description?: string;
   price: number;
   createdAt: string;
+  images?: string; // JSON stringified array
 };
 
 export default function Admin() {
@@ -28,6 +29,8 @@ export default function Admin() {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [editId, setEditId] = useState<string | null>(null);
+  const [images, setImages] = useState<string[]>([]);
+  const [editImages, setEditImages] = useState<string[]>([]);
 
   // Pour modifier email/mdp admin
   const [email, setEmail] = useState(session?.user?.email || "");
@@ -42,30 +45,20 @@ export default function Admin() {
     }
   }, [status, session, msg]);
 
-  if (status !== "authenticated" || !session.user?.isAdmin) {
-    return <div style={{ margin: "5rem auto", textAlign: "center" }}>Accès refusé</div>;
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setMsg("");
-    const url = editId ? "/api/edit-dossier" : "/api/add-dossier";
-    const body = {
-      id: editId,
-      title,
-      description,
-      price: Number(price)
-    };
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (res.ok) {
-      setMsg(editId ? "Dossier modifié !" : "Dossier ajouté !");
-      setTitle(""); setDescription(""); setPrice(""); setEditId(null);
-    } else {
-      setMsg("Erreur : " + (await res.text()));
+  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files) return;
+    const arr: string[] = [];
+    const toLoad = Math.min(files.length, 3);
+    let loaded = 0;
+    for (let i = 0; i < toLoad; i++) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        arr.push(event.target?.result as string);
+        loaded++;
+        if (loaded === toLoad) setImages([...arr]);
+      };
+      reader.readAsDataURL(files[i]);
     }
   }
 
@@ -74,6 +67,38 @@ export default function Admin() {
     setDescription(d.description || "");
     setPrice(d.price.toString());
     setEditId(d.id);
+    try {
+      setEditImages(d.images ? JSON.parse(d.images as any) : []);
+    } catch {
+      setEditImages([]);
+    }
+    setImages([]); // reset upload
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setMsg("");
+    const url = editId ? "/api/edit-dossier" : "/api/add-dossier";
+    const body: any = {
+      id: editId,
+      title,
+      description,
+      price: Number(price),
+      images: images.length ? images : editId ? editImages : []
+    };
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) {
+      setMsg(editId ? "Dossier modifié !" : "Dossier ajouté !");
+      setTitle(""); setDescription(""); setPrice(""); setEditId(null); setImages([]); setEditImages([]);
+      // Refresh dossiers
+      fetch("/api/dossiers").then(res => res.json()).then(setDossiers);
+    } else {
+      setMsg("Erreur : " + (await res.text()));
+    }
   }
 
   async function handleDeleteDossier(id: string) {
@@ -121,6 +146,10 @@ export default function Admin() {
     } else {
       setMsgAccount("Erreur : " + (await res.text()));
     }
+  }
+
+  if (status !== "authenticated" || !session.user?.isAdmin) {
+    return <div style={{ margin: "5rem auto", textAlign: "center" }}>Accès refusé</div>;
   }
 
   return (
@@ -194,6 +223,7 @@ export default function Admin() {
                 <th style={{ padding: "10px 16px" }}>Titre</th>
                 <th>Description</th>
                 <th>Prix ($)</th>
+                <th>Images</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -204,6 +234,13 @@ export default function Admin() {
                   <td>{d.description}</td>
                   <td>{d.price}</td>
                   <td>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      {(d.images ? JSON.parse(d.images) : []).map((img: string, i: number) => (
+                        <img key={i} src={img} style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 7, border: "1.5px solid #233" }} />
+                      ))}
+                    </div>
+                  </td>
+                  <td>
                     <button onClick={() => handleEdit(d)} style={{ marginRight: 8 }}>Modifier</button>
                     <button onClick={() => handleDeleteDossier(d.id)} style={{ background: "#c22", color: "#fff" }}>Supprimer</button>
                   </td>
@@ -211,7 +248,7 @@ export default function Admin() {
               ))}
               {dossiers.length === 0 && (
                 <tr>
-                  <td colSpan={4} style={{ color: "#888", textAlign: "center", padding: 14 }}>Aucun dossier créé.</td>
+                  <td colSpan={5} style={{ color: "#888", textAlign: "center", padding: 14 }}>Aucun dossier créé.</td>
                 </tr>
               )}
             </tbody>
@@ -227,12 +264,24 @@ export default function Admin() {
           <input required value={title} onChange={e => setTitle(e.target.value)} placeholder="Titre" style={{ width: "100%", margin: "8px 0", padding: 16, fontSize: 17 }} />
           <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Description" style={{ width: "100%", margin: "8px 0", padding: 16, fontSize: 17, minHeight: 70 }} />
           <input required type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="Prix en dollars (USD)" style={{ width: "100%", margin: "8px 0", padding: 16, fontSize: 17 }} />
+          <label>
+            Images (max 3)&nbsp;
+            <input type="file" accept="image/*" multiple onChange={handleImageUpload} />
+          </label>
+          <div style={{ display: "flex", gap: 8, marginBottom: 18, marginTop: 8 }}>
+            {images.map((img, i) => (
+              <img key={i} src={img} style={{ width: 70, height: 70, objectFit: "cover", borderRadius: 8, border: "2px solid #233" }} />
+            ))}
+            {editId && !images.length && editImages.map((img, i) => (
+              <img key={i} src={img} style={{ width: 70, height: 70, objectFit: "cover", borderRadius: 8, border: "2px solid #233" }} />
+            ))}
+          </div>
           <div style={{ display: "flex", alignItems: "center", marginTop: 16 }}>
             <button type="submit" style={{ padding: "10px 32px", background: "#189", color: "#fff", border: "none", borderRadius: 6, fontSize: 17 }}>
               {editId ? "Modifier" : "Ajouter"}
             </button>
             {editId && (
-              <button onClick={() => { setEditId(null); setTitle(""); setDescription(""); setPrice(""); }} type="button" style={{ marginLeft: 14 }}>
+              <button onClick={() => { setEditId(null); setTitle(""); setDescription(""); setPrice(""); setImages([]); setEditImages([]); }} type="button" style={{ marginLeft: 14 }}>
                 Annuler
               </button>
             )}
