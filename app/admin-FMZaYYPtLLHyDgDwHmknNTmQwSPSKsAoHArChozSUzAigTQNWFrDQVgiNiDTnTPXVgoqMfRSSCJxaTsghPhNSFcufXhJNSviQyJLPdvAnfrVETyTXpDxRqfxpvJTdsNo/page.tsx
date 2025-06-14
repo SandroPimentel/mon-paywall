@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
+import Image from "next/image";
 
+// Types bien définis
 type GuestPurchase = {
   id: string;
   email: string;
@@ -11,13 +13,14 @@ type GuestPurchase = {
   amountBtc?: number;
   btcUsdRate?: number;
 };
+
 type Dossier = {
   id: string;
   title: string;
   description?: string;
   price: number;
   createdAt: string;
-  images?: string; // JSON stringified array
+  images?: string; // JSON.stringified string[]
 };
 
 export default function Admin() {
@@ -32,7 +35,7 @@ export default function Admin() {
   const [images, setImages] = useState<string[]>([]);
   const [editImages, setEditImages] = useState<string[]>([]);
 
-  // Pour modifier email/mdp admin
+  // Admin user modif
   const [email, setEmail] = useState(session?.user?.email || "");
   const [password, setPassword] = useState("");
   const [msgAccount, setMsgAccount] = useState("");
@@ -40,7 +43,9 @@ export default function Admin() {
   useEffect(() => {
     if (status === "authenticated" && session.user?.isAdmin) {
       fetch("/api/guest-purchases").then(res => res.json()).then(setPurchases);
-      fetch("/api/dossiers").then(res => res.json()).then(setDossiers);
+      fetch("/api/dossiers").then(res => res.json()).then((ds: Dossier[]) => {
+        setDossiers(ds);
+      });
       setEmail(session.user?.email || "");
     }
   }, [status, session, msg]);
@@ -68,7 +73,7 @@ export default function Admin() {
     setPrice(d.price.toString());
     setEditId(d.id);
     try {
-      setEditImages(d.images ? JSON.parse(d.images as any) : []);
+      setEditImages(d.images ? (JSON.parse(d.images) as string[]) : []);
     } catch {
       setEditImages([]);
     }
@@ -79,12 +84,13 @@ export default function Admin() {
     e.preventDefault();
     setMsg("");
     const url = editId ? "/api/edit-dossier" : "/api/add-dossier";
-    const body: any = {
+    // Plus de any ici
+    const body = {
       id: editId,
       title,
       description,
       price: Number(price),
-      images: images.length ? images : editId ? editImages : []
+      images: images.length ? images : (editId ? editImages : [])
     };
     const res = await fetch(url, {
       method: "POST",
@@ -94,7 +100,6 @@ export default function Admin() {
     if (res.ok) {
       setMsg(editId ? "Dossier modifié !" : "Dossier ajouté !");
       setTitle(""); setDescription(""); setPrice(""); setEditId(null); setImages([]); setEditImages([]);
-      // Refresh dossiers
       fetch("/api/dossiers").then(res => res.json()).then(setDossiers);
     } else {
       setMsg("Erreur : " + (await res.text()));
@@ -110,7 +115,7 @@ export default function Admin() {
     });
     if (res.ok) {
       setMsg("Dossier supprimé !");
-      setDossiers(dossiers => dossiers.filter(d => d.id !== id));
+      setDossiers(ds => ds.filter(d => d.id !== id));
     } else {
       setMsg("Erreur à la suppression");
     }
@@ -235,8 +240,15 @@ export default function Admin() {
                   <td>{d.price}</td>
                   <td>
                     <div style={{ display: "flex", gap: 4 }}>
-                      {(d.images ? JSON.parse(d.images) : []).map((img: string, i: number) => (
-                        <img key={i} src={img} style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 7, border: "1.5px solid #233" }} />
+                      {(d.images ? JSON.parse(d.images) as string[] : []).map((img, i) => (
+                        <Image
+                          key={i}
+                          src={img}
+                          alt={`Miniature ${i + 1}`}
+                          width={40}
+                          height={40}
+                          style={{ objectFit: "cover", borderRadius: 7, border: "1.5px solid #233" }}
+                        />
                       ))}
                     </div>
                   </td>
@@ -270,10 +282,10 @@ export default function Admin() {
           </label>
           <div style={{ display: "flex", gap: 8, marginBottom: 18, marginTop: 8 }}>
             {images.map((img, i) => (
-              <img key={i} src={img} style={{ width: 70, height: 70, objectFit: "cover", borderRadius: 8, border: "2px solid #233" }} />
+              <Image key={i} src={img} alt={`Aperçu ${i + 1}`} width={70} height={70} style={{ objectFit: "cover", borderRadius: 8, border: "2px solid #233" }} />
             ))}
             {editId && !images.length && editImages.map((img, i) => (
-              <img key={i} src={img} style={{ width: 70, height: 70, objectFit: "cover", borderRadius: 8, border: "2px solid #233" }} />
+              <Image key={i} src={img} alt={`Aperçu existant ${i + 1}`} width={70} height={70} style={{ objectFit: "cover", borderRadius: 8, border: "2px solid #233" }} />
             ))}
           </div>
           <div style={{ display: "flex", alignItems: "center", marginTop: 16 }}>

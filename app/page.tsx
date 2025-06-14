@@ -2,7 +2,17 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import BtcPaymentForm from "@/components/BtcPaymentForm";
-import { Dossier } from "@/types/dossier";
+
+// ⬇️ Copie ce type localement !
+type Dossier = {
+  id: string;
+  title: string;
+  description?: string;
+  price: number;
+  createdAt: string;
+  files: string[];
+  images?: string; // Ajouté pour le build
+};
 
 // AJOUTE ici le nouveau type :
 type ModalType =
@@ -36,7 +46,7 @@ export default function Home() {
           Ici, accédez à des contenus exclusifs et confidentiels de modèles populaires, influenceuses et créatrices de contenus. Leaks, photos privées, vidéos premium : retrouvez tous les dossiers inédits issus des plus grandes plateformes (OnlyFans, MYM, etc).
         </div>
 
-          <div className="site-desc">
+        <div className="site-desc">
           🚨 Pour chaque dossier, la confidentialité et l’anonymat de nos utilisateurs sont garantis.
         </div>
       </div>
@@ -65,9 +75,10 @@ export default function Home() {
             <div className="modal-desc">{modal.dossier.description || "Pas de description."}</div>
             {modal.dossier.images && (
               <div className="modal-images">
-                {JSON.parse(modal.dossier.images).map((img, i) => (
+                {(JSON.parse(modal.dossier.images) as string[]).map((img, i) => (
                   <img key={i} src={img} alt={`Image ${i + 1}`} />
                 ))}
+
               </div>
             )}
             <div className="modal-prix">

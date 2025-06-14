@@ -1,8 +1,9 @@
-export interface Dossier {
+export type Dossier = {
   id: string;
   title: string;
   description?: string;
   price: number;
-  files: string[];
   createdAt: string;
+  files: string[]; // jamais undefined !
+  images?: string;
 }

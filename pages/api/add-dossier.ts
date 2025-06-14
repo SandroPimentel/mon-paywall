@@ -18,7 +18,7 @@ export default async function handler(
 ) {
   if (req.method !== "POST") return res.status(405).end();
 
-  const session = (await getServerSession(req, res, authOptions as any)) as AdminSession;
+  const session = (await getServerSession(req, res, authOptions)) as AdminSession;
   if (!session?.user?.isAdmin) return res.status(401).json({ error: "unauthorized" });
 
   const { title, description, price, images } = req.body as AddDossierBody;
