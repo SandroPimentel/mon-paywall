@@ -188,14 +188,12 @@ body {
 
 .modal-images {
   display: flex;
-  flex-direction: row;      // images en ligne
-  gap: 1.3rem;              // espace entre chaque
-  justify-content: center;  // centrage horizontal
-  align-items: flex-end;    // aligné en bas pour la vibe "vignette"
+  flex-direction: column;
+  gap: 0.9rem;
+  align-items: center;
   margin: 0 0 1.4rem 0;
   width: 100%;
   position: static;
-  overflow: visible;        // pas de scroll ni crop
 }
 
 .modal-images img {
